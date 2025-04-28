@@ -1,6 +1,7 @@
 package com.gianluca_gdc.tabsplitter.ui
 
 
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDirection.Companion.Content
 import androidx.compose.ui.unit.dp
 import com.gianluca_gdc.tabsplitter.model.BillDetails
 import com.gianluca_gdc.tabsplitter.ui.constants.Color.Black
@@ -37,11 +40,13 @@ fun BillEntryScreen(logoPainter: Painter, onNext: (BillDetails) -> Unit,onSettin
 
 
     Column(modifier = Modifier.padding(24.dp)) {
-        Row(Modifier.padding(3.dp)
+        Row(Modifier
+            .padding(3.dp)
             .fillMaxWidth(),
             horizontalArrangement = Arrangement.End){
             Icon(
-                modifier = Modifier.clickable {onSettings()}
+                modifier = Modifier
+                    .clickable { onSettings() }
                     .size(40.dp),
                 imageVector = Icons.Default.Settings,
                 contentDescription = "Settings",
@@ -60,7 +65,29 @@ fun BillEntryScreen(logoPainter: Painter, onNext: (BillDetails) -> Unit,onSettin
 
             )
         }
-        Text("Enter Bill Details", style = MaterialTheme.typography.titleLarge)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Enter Bill Details", style = MaterialTheme.typography.titleLarge)
+            IconButton(
+                onClick = { /* TODO: implement OCR scan */ },
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.,
+                    contentDescription = "OCR Scan"
+                )
+            }
+        }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
