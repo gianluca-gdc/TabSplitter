@@ -7,9 +7,9 @@ This is the fully implemented solo-MVP version, architected for future real-time
 
 ---
 
-## 🚀 Features
+## Features
 
-### ✔ Complete Bill-Splitting Flow
+### Complete Bill-Splitting Flow
 - Enter or scan receipt (OCR)
 - Subtotal, tax %, tip %
 - Add participants manually
@@ -18,25 +18,25 @@ This is the fully implemented solo-MVP version, architected for future real-time
 - Add items and assign each to one or multiple people
 - Supports shared and individual items
 
-### ✔ Smart Per-Person Calculation
+### Smart Per-Person Calculation
 - Only pays for items assigned to them
 - Proportional tax & tip distribution
 - Clean two-decimal rounding
 - Transparent math and breakdown screen
 
-### ✔ Payment & Sharing
+### Payment & Sharing
 - One-tap SMS sending via contacts
 - Venmo / Cash App / Zelle link support
 - Payer excluded from SMS flow
 - Copy or share final summary
 
-### ✔ Local Storage (Room)
+### Local Storage (Room)
 - Saves recent participants
 - Remembers linked contacts
 - Stores past receipts
 - Saves payment handles and payer info
 
-### ✔ UI/UX
+### UI/UX
 - Compose Multiplatform UI
 - Smooth 4-step flow
 - Success animation after sending messages
@@ -44,7 +44,7 @@ This is the fully implemented solo-MVP version, architected for future real-time
 
 ---
 
-## 📸 Receipt Capture + OCR
+## Receipt Capture + OCR
 The camera receipt flow includes:
 - On-device text recognition  
 - Auto-extraction of subtotal, tax, item names & prices  
@@ -53,7 +53,7 @@ The camera receipt flow includes:
 
 ---
 
-## 🏛️ Architecture
+## Architecture
 
 ### Frontend
 - Kotlin Multiplatform  
@@ -76,13 +76,13 @@ The camera receipt flow includes:
 
 ---
 
-## 📱 Platforms
+## Platforms
 - **Android** (fully implemented)  
 - Desktop/iOS support planned
 
 ---
 
-## 🧮 Calculation Model
+## Calculation Model
 PersonSubtotal = sum(items assigned to person)
 TaxShare = (PersonSubtotal / TotalSubtotal) * TaxAmount
 TipShare = (PersonSubtotal / TotalSubtotal) * TipAmount
@@ -92,7 +92,7 @@ FinalTotal = PersonSubtotal + TaxShare + TipShare
 
 ---
 
-## 💾 Local Storage
+## Local Storage
 
 The app saves:
 - Participants  
@@ -105,7 +105,7 @@ Perfect for re-using common dining groups.
 
 ---
 
-## 📤 Sharing & Exporting
+## Sharing & Exporting
 - SMS sending for each person  
 - Summary copied to clipboard  
 - Share via any installed app  
@@ -113,24 +113,13 @@ Perfect for re-using common dining groups.
 
 ---
 
-## 🛠️ Installation (Android)
+## Installation (Android)
 ./gradlew installDebug
 Or run directly through Android Studio.
 
 ---
 
-## 🔮 Future Upgrades (Architecture-Ready)
-
-- Real-time group sessions  
-- Multi-user sync via WebSockets  
-- Cloud backend (PostgreSQL + Ktor)  
-- OAuth login (Google/Apple)  
-- Payment settlement tracking  
-- Improved AI item parsing  
-
----
-
-## 👤 Author
+## Author
 **Gianluca D. Cutugno**  
 📧 thegianlucacutugno@gmail.com  
 📱 845-750-5132  
@@ -138,5 +127,5 @@ Or run directly through Android Studio.
 
 ---
 
-## 📜 License
+## License
 MIT License  
