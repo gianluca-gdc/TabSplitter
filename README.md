@@ -1,131 +1,56 @@
-# TabSplitter — Smart Receipt & Bill Splitting App (Kotlin Multiplatform)
+# TabSplitter
 
-**TabSplitter** is a modern, fast, and intuitive receipt-splitting app built with **Kotlin Multiplatform** and **Compose Multiplatform**.  
-It lets one payer take a photo of a receipt (or enter items manually), assign each item to specific people, and instantly generate a clean per-person breakdown — including **tax**, **tip**, **shared items**, and **payment links**.
+Splitting a check with a group is annoying. Someone always does the math wrong, 
+nobody knows how to split tax proportionally, and half the people forget to Venmo 
+you. TabSplitter fixes that.
 
-This is the fully implemented solo-MVP version, architected for future real-time multi-user syncing.
-
----
-
-## Features
-
-### Complete Bill-Splitting Flow
-- Enter or scan receipt (OCR)
-- Subtotal, tax %, tip %
-- Add participants manually
-- Link participants to phone contacts
-- Auto-add payer’s name from Payment Settings
-- Add items and assign each to one or multiple people
-- Supports shared and individual items
-
-### Smart Per-Person Calculation
-- Only pays for items assigned to them
-- Proportional tax & tip distribution
-- Clean two-decimal rounding
-- Transparent math and breakdown screen
-
-### Payment & Sharing
-- One-tap SMS sending via contacts
-- Venmo / Cash App / Zelle link support
-- Payer excluded from SMS flow
-- Copy or share final summary
-
-### Local Storage (Room)
-- Saves recent participants
-- Remembers linked contacts
-- Stores past receipts
-- Saves payment handles and payer info
-
-### UI/UX
-- Compose Multiplatform UI
-- Smooth 4-step flow
-- Success animation after sending messages
-- Auto-returns to home
+Built with Kotlin Multiplatform and Compose Multiplatform as a solo project — 
+Android first, with the architecture already set up for iOS and desktop.
 
 ---
 
-## Receipt Capture + OCR
-The camera receipt flow includes:
-- On-device text recognition  
-- Auto-extraction of subtotal, tax, item names & prices  
-- Ability to correct or adjust fields
-- Falls back to manual entry when needed
+## What it does
+
+You take a photo of a receipt or enter items manually. The app uses on-device OCR 
+to pull out item names and prices automatically. You add the people at the table, 
+drag items to whoever ordered them, set tip and tax, and it handles the rest — 
+each person gets an exact total with a proportional share of tax and tip, not just 
+a flat split.
+
+When you're done it sends each person an SMS with what they owe and a payment link 
+for Venmo, Cash App, or Zelle. The payer never gets a message sent to themselves.
 
 ---
 
-## Architecture
+## Stack
 
-### Frontend
-- Kotlin Multiplatform  
-- Compose Multiplatform  
-- ViewModel + StateFlow  
-- Multi-screen navigation  
-- Modular state management
-
-### Data Layer
-- Room database  
-  - `ReceiptEntity`  
-  - `PersonEntity`  
-  - `ItemEntity`  
-  - `PaymentHandleEntity`
-
-### Logic
-- Modular calculation engine  
-- OCR parsing layer  
-- Platform-specific payment handlers  
+- Kotlin Multiplatform / Compose Multiplatform
+- Room for local storage (participants, receipts, payment handles)
+- Google ML Kit for receipt OCR
+- ViewModel + StateFlow for state management
+- Platform-specific payment deep links (Venmo, Cash App, Zelle)
 
 ---
 
-## Platforms
-- **Android** (fully implemented)  
-- Desktop/iOS support planned
+## How the math works
+
+Each person only pays for items assigned to them. Tax and tip are distributed 
+proportionally based on each person's subtotal relative to the total — so if you 
+ordered more expensive food you pay a larger share of tax and tip. Everything 
+rounds to two decimals.
 
 ---
 
-## Calculation Model
-PersonSubtotal = sum(items assigned to person)
-TaxShare = (PersonSubtotal / TotalSubtotal) * TaxAmount
-TipShare = (PersonSubtotal / TotalSubtotal) * TipAmount
-FinalTotal = PersonSubtotal + TaxShare + TipShare
-- Shared items are evenly divided among assigned people.
-- Everything is rounded to 2 decimals.
-
----
-
-## Local Storage
-
-The app saves:
-- Participants  
-- Linked contacts  
-- Payment handles  
-- Past receipts  
-- OCR corrections  
-
-Perfect for re-using common dining groups.
-
----
-
-## Sharing & Exporting
-- SMS sending for each person  
-- Summary copied to clipboard  
-- Share via any installed app  
-- Never sends message to payer  
-
----
-
-## Installation (Android)
+## Running it
+```bash
 ./gradlew installDebug
-Or run directly through Android Studio.
+```
+
+Or just open in Android Studio and run.
 
 ---
 
-## Author
-**Gianluca D. Cutugno**  
-📧 thegianlucacutugno@gmail.com  
-📱 845-750-5132  
-💻 GitHub: https://github.com/gianluca-gdc
+## Status
 
----
-
-## License
-MIT License  
+Core flow is fully functional on Android. Multi-user real-time syncing and 
+iOS support are the next steps.
