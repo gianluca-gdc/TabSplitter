@@ -54,6 +54,8 @@ import com.gianluca_gdc.tabsplitter.ui.constants.Color.Black
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.mutableStateListOf
+
 @Composable
 fun ButtonColor(targetValue: Color, secondTargetValue: Color, boolean: Boolean ): Color {
      val buttonColor by animateColorAsState(
@@ -69,43 +71,44 @@ fun ItemEntryScreen(
    people: SnapshotStateList<Person>,
     payerName: String,
     onBack: () -> Unit,
-    onNext: (List<Person>) -> Unit
+    onNext: (List<Person>) -> Unit,
+   initialItems: List<Pair<String, Double>> = emptyList()
 ) {
-    // 🧩 State: itemName, itemPrice, selectedPeople, list of all added items
+
+    val remainingOCRItems = remember { mutableStateListOf<Pair<String, Double>>() }
     val itemName = remember { mutableStateOf("") }
     val itemPrice = remember { mutableStateOf("") }
     val selectedPeople = remember { mutableStateMapOf<String, Int>() }
     val peopleWithItems = remember { people }
+    val hasInjectedInitialItems = remember { mutableStateOf(false) }
+    if (!hasInjectedInitialItems.value && initialItems.isNotEmpty()) {
+        val nonPayers = peopleWithItems.filter { it.name != payerName }
+        val splitCount = nonPayers.size.coerceAtLeast(1)
+        var index = 0
+        initialItems.forEach { (name, price) ->
+            val person = nonPayers[index % splitCount]
+            person.items.add(AssignedItem(name, price, 1, person.name))
+            person.total += price
+            index++
+        }
+        hasInjectedInitialItems.value = true
+    }
     val itemNameFocusRequester = remember { FocusRequester() }
     val trigger = remember { mutableStateOf(0) }
-    // 🔠 Item name field ***
-    // 💵 Item price field ***
-    // 👥 Dropdown or Chips to select people for the item
-    // ➕ Add item button
-    // 📝 List of added items + assigned people
-    // 🔙 Back button + 🔜 Next button
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
-            .background(Color.Black),
+            .height(80.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             "Add Items", style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 30.sp,
-                color = Color.White
+                color = Color.Black
             ),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 30.dp)
 
-        )
-        Image(
-            painter = painterResource(id = R.drawable.fork_knife_plus_vector), // replace with actual file name
-            contentDescription = "People Icon",
-            modifier = Modifier
-                .size(45.dp)
-                .padding(start = 10.dp)
         )
     }
     Spacer(Modifier.height(70.dp))
@@ -133,10 +136,13 @@ fun ItemEntryScreen(
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.Black,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = Color.Black
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Black,
+                    unfocusedIndicatorColor = Color.Gray,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Gray,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
                 ),
                 modifier = Modifier.weight(1f)
                     .focusRequester(itemNameFocusRequester),
@@ -157,10 +163,13 @@ fun ItemEntryScreen(
                     imeAction = ImeAction.Next
                 ),
                 maxLines = 1,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.Black,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = Color.Black
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Black,
+                    unfocusedIndicatorColor = Color.Gray,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Gray,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
                 ),
                 modifier = Modifier.width(100.dp)
             )
@@ -182,8 +191,8 @@ fun ItemEntryScreen(
                     selectedPeople.forEach { (name, assignedQty) ->
                         val person = peopleWithItems.find { it.name == name } ?: return@forEach
                         val actualPrice = unitPrice * assignedQty
-                        person.items.add(AssignedItem(itemName.value, actualPrice, assignedQty))
-                        person.total += actualPrice // Update the person's total
+                        person.items.add(AssignedItem(itemName.value, actualPrice, assignedQty, person.name))
+                        person.total += actualPrice // update total
                     }
                     itemName.value = ""
                     itemPrice.value = ""
@@ -201,9 +210,15 @@ fun ItemEntryScreen(
                             && selectedPeople.isNotEmpty()),
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(12.dp) // Ensure rounded corners
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Add")
+            }
+        }
+        if (remainingOCRItems.isNotEmpty()) {
+            Text("Unassigned OCR Items:", fontWeight = FontWeight.Bold)
+            remainingOCRItems.forEach { (name, price) ->
+                Text("• $name - $${"%.2f".format(price)}")
             }
         }
         LazyColumn(
@@ -259,33 +274,26 @@ fun ItemEntryScreen(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
-                onClick = { onBack() },
-                modifier = Modifier
-                    .width(150.dp)
-                    .padding(end = 10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(Black),
-                    contentColor = Color.White
+            OutlinedButton(
+                onClick = onBack,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(12.dp) // Ensure rounded corners
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Text("Back")
             }
 
             Button(
                 onClick = {
-                    val distinctPeople = peopleWithItems.distinctBy { it.name }
-                    onNext(distinctPeople)
+                    onNext(peopleWithItems.map { it.copy() })
                 },
-                modifier = Modifier.width(300.dp),
                 enabled = peopleWithItems.all { it.items.isNotEmpty() },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonColor(Color.Black,Color.Gray,
                         boolean = peopleWithItems.all { it.items.isNotEmpty() }),
                     contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(12.dp) // Ensure rounded corners
+                )
             ) {
                 Text("Next")
             }
@@ -340,7 +348,7 @@ fun Menu(people: SnapshotStateList<Person>, selectedPeople: MutableMap<String, I
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(40.dp)
-                        .padding(horizontal = 8.dp) // Optional padding for spacing
+                        .padding(horizontal = 8.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),

@@ -23,13 +23,29 @@ fun MyApplicationTheme(
     val colors = if (darkTheme) {
         darkColorScheme(
             primary = Color(0xFF000000),
-            secondary = Color(0xFF03DAC5),
+            onPrimary = Color(0xFFFFFFFF),
+            primaryContainer = Color(0xFF424242),
+            onPrimaryContainer = Color(0xFFFFFFFF),
+            secondary = Color(0xFF9E9E9E),
+            onSecondary = Color(0xFF000000),
+            background = Color(0xFF121212),
+            surface = Color(0xFF121212),
+            onSurface = Color(0xFFFFFFFF),
+            outline = Color(0xFF757575),
             tertiary = Color(0xFF000000)
         )
     } else {
         lightColorScheme(
             primary = Color(0xFF000000),
-            secondary = Color(0xFF03DAC5),
+            onPrimary = Color(0xFFFFFFFF),
+            primaryContainer = Color(0xFFEEEEEE),
+            onPrimaryContainer = Color(0xFF000000),
+            secondary = Color(0xFF757575),
+            onSecondary = Color(0xFFFFFFFF),
+            background = Color(0xFFFFFFFF),
+            surface = Color(0xFFFFFFFF),
+            onSurface = Color(0xFF000000),
+            outline = Color(0xFFBDBDBD),
             tertiary = Color(0xFF000000)
         )
     }

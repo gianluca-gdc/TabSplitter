@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
-import com.gianluca_gdc.tabsplitter.ui.BillEntryScreen
+import com.gianluca_gdc.tabsplitter.android.ui.BillEntryScreen
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
@@ -19,18 +19,23 @@ import com.gianluca_gdc.tabsplitter.android.ui.ItemEntryScreen
 import com.gianluca_gdc.tabsplitter.android.ui.PeopleEntryScreen
 import com.gianluca_gdc.tabsplitter.android.ui.SuccessScreen
 import com.gianluca_gdc.tabsplitter.android.ui.Summary
+import com.gianluca_gdc.tabsplitter.android.ui.ScanReceiptScreen
 import com.gianluca_gdc.tabsplitter.model.Person
 import com.gianluca_gdc.tabsplitter.model.BillDetails
+import com.gianluca_gdc.tabsplitter.model.BillItem
 import com.gianluca_gdc.tabsplitter.ui.SettingsDataStore
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateMapOf
+import com.gianluca_gdc.tabsplitter.android.ui.ReviewScannedItemsScreen
 
 @Composable
 fun App(logoPainter: Painter) {
     var currentStep by remember { mutableStateOf("bill") }
     val people = remember { mutableStateListOf<Person>() }
     var billDetails by remember { mutableStateOf<BillDetails?>(null) }
+    var parsedItems by remember { mutableStateOf<List<Pair<String, Double>>>(emptyList()) }
+    // preserve original scanned items separately
+    var originalParsedItems by remember { mutableStateOf(parsedItems) }
     val context = LocalContext.current
     val payerName by SettingsDataStore.getPayerNameFlow(context).collectAsState(initial = "")
     val venmoHandle by SettingsDataStore.getVenmoFlow(context).collectAsState(initial = "")
@@ -42,6 +47,7 @@ fun App(logoPainter: Painter) {
     var venmoHandleInput by rememberSaveable { mutableStateOf(venmoHandle) }
     var cashAppHandleInput by rememberSaveable { mutableStateOf(cashAppHandle) }
     var zelleInfoInput by rememberSaveable { mutableStateOf(zelleInfo) }
+
 
     LaunchedEffect(payerName) {
         payerNameInput = payerName
@@ -63,13 +69,23 @@ fun App(logoPainter: Painter) {
         when (currentStep) {
             "bill" -> BillEntryScreen(
                 logoPainter = logoPainter,
+                initialBill = billDetails,
+                isAutomaticFlow = parsedItems.isNotEmpty(),
                 onNext = { details ->
+                    val automatic = parsedItems.isNotEmpty()
                     billDetails = details
+                    if (!automatic) {
+                        parsedItems = emptyList()
+                    }
                     currentStep = "people"
                 },
                 onSettings = {
                     currentStep = "settings"
-                }
+                },
+                onScanReceipt = {
+                    currentStep = "scan"
+                },
+                onClearParsedItems = { parsedItems = emptyList() }
             )
             "settings" -> {
                 SettingsScreen(
@@ -115,7 +131,29 @@ fun App(logoPainter: Painter) {
                     nameToNumberMap.forEach { (name, phoneNumber) ->
                         people.add(Person(name = name, phoneNumber = phoneNumber))
                     }
-                    currentStep = "items"
+                    currentStep = if (parsedItems.isNotEmpty()) "review" else "items"
+                }
+            )
+            "review" -> ReviewScannedItemsScreen(
+                items = parsedItems.map { (name, price) -> com.gianluca_gdc.tabsplitter.model.BillItem(name = name, price = price, assignedTo = null) },
+                people = people.map { it.name },
+                onConfirm = { confirmedItems ->
+                    // parsedItems = confirmedItems.map { it.name to it.price }
+                    val updatedPeople = people.map { person ->
+                        val assignedItems = confirmedItems.filter { it.assignedTo == person.name }
+                        person.copy(
+                            items = assignedItems.toMutableList(),
+                            total = assignedItems.sumOf { it.price }
+                        )
+                    }
+
+                    people.clear()
+                    people.addAll(updatedPeople)
+                    parsedItems = originalParsedItems
+                    currentStep = "summary"
+                },
+                onBack = {
+                    currentStep = "people"
                 }
             )
             "items" -> ItemEntryScreen(
@@ -123,6 +161,7 @@ fun App(logoPainter: Painter) {
                     currentStep = "people"
                 },
                 payerName = payerNameInput,
+                initialItems = parsedItems,
                 onNext = { updatedPeople ->
 
                     people.clear()
@@ -136,7 +175,7 @@ fun App(logoPainter: Painter) {
                     currentStep = "success"
                 },
                 onBack = {
-                    currentStep = "items"
+                    currentStep = if (parsedItems.isNotEmpty()) "review" else "items"
                 },
                 people = people,
                 subtotal = billDetails?.subtotal ?: 0.0,
@@ -151,8 +190,24 @@ fun App(logoPainter: Painter) {
                     currentStep = "bill"
                     people.clear()
                     billDetails = null
+                    parsedItems = emptyList()
                 }
-            ) // Replace with a real composable later
+            )
+            "scan" -> ScanReceiptScreen(
+                onBack = { currentStep = "bill" },
+                onLaunchCamera = {}, // optional
+                onLaunchGallery = {}, // optional
+                onScanComplete = { subtotal, tax, items ->
+                    billDetails = BillDetails(
+                        subtotal = subtotal ?: 0.0,
+                        tip = 0.0,
+                        tax = tax ?: 0.0
+                    )
+                    originalParsedItems = items
+                    parsedItems = items
+                    currentStep = "bill"
+                }
+            )
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.gianluca_gdc.tabsplitter.android.ui
 
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.net.Uri
 import android.provider.ContactsContract
@@ -33,6 +35,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -68,18 +71,51 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.sp
 import com.gianluca_gdc.tabsplitter.android.R
 import kotlinx.coroutines.coroutineScope
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.lang.Thread.sleep
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.platform.LocalContext
 import com.gianluca_gdc.tabsplitter.model.Person
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults.shape
+import androidx.compose.material3.Divider
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
+import com.gianluca_gdc.tabsplitter.android.datastore.loadPeople
+import com.gianluca_gdc.tabsplitter.android.datastore.savePerson
+import androidx.compose.runtime.collectAsState
+import com.gianluca_gdc.tabsplitter.android.ui.ButtonColor
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("ContextCastToActivity")
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PeopleEntryScreen(
     onNext: (Map<String,String>) -> Unit,
@@ -91,7 +127,12 @@ fun PeopleEntryScreen(
     var alreadyEntered by remember { mutableStateOf(false) }
     var limitReached by remember { mutableStateOf(false) }
     val context = LocalContext.current as Activity
-
+    var searchInput by remember { mutableStateOf("") }
+    var expanded by remember {mutableStateOf(false)}
+    val coroutineScope = rememberCoroutineScope()
+    // collecting contacts as state
+    val savedFriends by loadPeople(context).collectAsState(initial = emptyMap())
+    val focusManager = LocalFocusManager.current
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact()
     ) { uri: Uri? ->
@@ -125,7 +166,10 @@ fun PeopleEntryScreen(
                                 val trimmed = name.trim().replaceFirstChar { c -> c.uppercase() }
 
                                 if (trimmed.isNotBlank() && !people.contains(trimmed)) {
-                                    people[trimmed] = phone
+                                    if(people.size < 10) { people[trimmed] = phone}
+                                    coroutineScope.launch {
+                                        savePerson(context = context, name = trimmed, phone = phone)
+                                    }
                                     nameInput = ""
                                     alreadyEntered = false
                                 } else if (people.contains(trimmed)) {
@@ -154,101 +198,72 @@ fun PeopleEntryScreen(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
-            .background(Color.Black),
+            .height(80.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             "Add Friends", style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
                 fontSize = 30.sp,
-                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
 
             ),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(start = 15.dp, top = 25.dp)
         )
-        Image(
-            painter = painterResource(id = R.drawable.person_plus_icon_vector), // replace with actual file name
-            contentDescription = "People Icon",
-            modifier = Modifier
-                .size(45.dp)
-                .padding(start = 5.dp, top = 0.dp)
-        )
+
     }
-    Column(modifier = Modifier.padding(start = 16.dp, bottom = 0.dp, end = 16.dp, top = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(start = 16.dp, bottom = 0.dp, end = 16.dp, top = 5.dp)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus()
+            }
+    ) {
 
 
         Spacer(modifier = Modifier.height(70.dp))
 
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = nameInput,
-                onValueChange = { nameInput = it },
-                label = { Text("Name") },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        val name = nameInput.trim().capitalize()
-                        if (name.isNotBlank() && !people.containsKey(name)) {
-                            people[name] = ""
-                            nameInput = ""
-                            alreadyEntered = false
-                        } else if (people.contains(nameInput.trim().capitalize())) {
-                            alreadyEntered = true
-                        }else if (people.size >= 10){
-                            limitReached = true
-                        }
-                    }
-                ),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.Black,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = Color.Black
-                ),
-                maxLines = 1
-
-            )
-            Button(
-                onClick = {
-                    val name = nameInput.trim().capitalize()
-                    if (name.isNotBlank() && !people.containsKey(name)) {
-                        people[name] = ""
-                        nameInput = ""
-                        alreadyEntered = false
-                    } else if (people.contains(nameInput.trim().capitalize())) {
-                        alreadyEntered = true
-                    }else if (people.size >= 10){
-                        limitReached = true
+        OutlinedTextField(
+            modifier = Modifier
+                .padding(top = 20.dp)
+                .fillMaxWidth()
+                .border(color = Color.Transparent, width = 0.dp)
+                .onKeyEvent { event ->
+                    if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
+                        focusManager.clearFocus()
+                        true
+                    } else {
+                        false
                     }
                 },
-                modifier = Modifier
-                    .height(70.dp)
-                    .width(50.dp) // square button for icon-like size
-                    .padding(top = 10.dp, bottom = 10.dp),
-                contentPadding = PaddingValues(0.dp), // optional: remove default padding
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(Black),
-                    contentColor = Color.White
-                )
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Text(
-                        text = "+",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
+            value = searchInput,
+            onValueChange = { searchInput = it },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
                 }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color(0xFFf5f5f5),
+                focusedContainerColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(30.dp),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search ,
+                    contentDescription = "Search"
+                )
             }
-        }
+        )
+
         Spacer(modifier = Modifier.height(7.dp))
-        Box(modifier = Modifier.fillMaxWidth(),
+        Box(modifier = Modifier.fillMaxWidth()
+            .padding(top = 4.dp),
             contentAlignment = Alignment.Center){
             Text(
                 if(alreadyEntered) {
@@ -270,80 +285,140 @@ fun PeopleEntryScreen(
                 )
 
             }
-        OutlinedButton(
-            onClick = {
-                val permission = android.Manifest.permission.READ_CONTACTS
-                if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(context, arrayOf(permission), 0)
-                } else {
-                    contactPickerLauncher.launch(null)
-                }
-            },
-            contentPadding = PaddingValues(10.dp),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-                .height(40.dp)
-                .width(170.dp)
-                .indication(
-                    interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(color = Color.Black) // <-- Customize here
-        ),
-            colors = ButtonDefaults.outlinedButtonColors( // optional, if you want to change background or content
-                contentColor = Color.Black
-            )
-        )  {
-            Text("Import Contact +",
-                Modifier.padding(bottom = 0.dp),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E90FF),
-                    fontSize = 16.sp
-                ))
-        }
+
         Spacer(modifier = Modifier.height(5.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "★ $payerName - YOU",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+        Row(modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+            ){
+
+            Text("Recent Friends",
+                style = MaterialTheme.typography.headlineLarge)
+
+            OutlinedButton(
+                border = null,
+                onClick = {
+                    val permission = Manifest.permission.READ_CONTACTS
+                    if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(context, arrayOf(permission), 0)
+                    } else {
+                        contactPickerLauncher.launch(null)
+                    }
+                },
+                contentPadding = PaddingValues(10.dp),
                 modifier = Modifier
-                    .weight(4f)
-                    .padding(vertical = 15.dp)
-                    .padding(start = 10.dp)
-            )
-        }
-        people.keys.forEachIndexed { index, person ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = person,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold
+                    .indication(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(
+                            color = Color.White
+                        )
                     ),
-                    modifier = Modifier
-                        .weight(4f)
-                        .padding(vertical = 15.dp)
-                        .padding(start = 10.dp)
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.Black,
+                    containerColor = Color(0xFF97b2e8),
                 )
-                IconButton(onClick = { people.remove(person)
-                    limitReached = false}) {
-                    Icon(Icons.Default.Delete, contentDescription = "Remove")
-                }
+            )  {
+                Text("Add Contact",
+                    Modifier.padding(bottom = 0.dp),
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 14.sp
+                    ))
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            LazyColumn(
+                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.heightIn(10.dp, 300.dp)
+            ) {
+
+                val entries = if (searchInput.isNotBlank()) {
+                    savedFriends.filter { (key, _) ->
+                        key.contains(searchInput, ignoreCase = true)
+                    }.entries.toList()
+                } else {
+                    savedFriends.entries.toList()
+                }
+
+                items(
+                    items = entries,
+                    key = { it.key } // use the friend name as a stable key
+                ) { (name, phone) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                focusManager.clearFocus()
+                                searchInput = ""
+                                if (people.size < 10)
+                                    people[name] = phone
+                            }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = phone,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
+            }
+
+
+
+        Spacer(Modifier.height(10.dp))
+        Divider(
+            thickness = 2.dp,
+            color = Color.LightGray,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            people.forEach {
+                FilterChip(modifier = Modifier.padding(3.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFFedd3d1)
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    selected = true,
+                    onClick = {
+                        searchInput = ""
+                        focusManager.clearFocus()
+                        people.entries.remove(it) },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "delete"
+                        )
+                }, label = { Text("${it.key}") })
+            }
+        }
 
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)
@@ -354,15 +429,12 @@ fun PeopleEntryScreen(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
-                onClick = { onBack() },
-                modifier = Modifier
-                    .width(150.dp)
-                    .padding(end = 10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(Black),
-                    contentColor = Color.White
-                )
+            OutlinedButton(
+                onClick = onBack,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Text("Back")
             }
@@ -370,10 +442,9 @@ fun PeopleEntryScreen(
             Button(
                 onClick = { people[payerName] = ""
                     onNext(people) },
-                modifier = Modifier.width(300.dp),
                 enabled = people.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(Black),
+                    containerColor = ButtonColor(Color(Black),Color.Gray,people.isNotEmpty()),
                     contentColor = Color.White
                 )
             ) {

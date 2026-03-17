@@ -1,17 +1,22 @@
 plugins {
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlin.android)
+}
+
+repositories {
+    google()
+    mavenCentral()
 }
 
 android {
     namespace = "com.gianluca_gdc.tabsplitter.android"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.gianluca_gdc.tabsplitter.android"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
@@ -33,15 +38,24 @@ android {
 dependencies {
     implementation(project(":shared"))
     implementation(libs.activity.compose)
-    implementation(libs.compose.material3)
-    implementation("com.google.android.material:material:1.9.0")
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.components.resources)
+    implementation(libs.compose.material)
+
+    implementation(libs.compose.material)
+    implementation(libs.android.material)
+
     implementation(libs.ui.tooling.preview.android)
     implementation(libs.glance.preview)
     implementation(libs.room.runtime.android)
     implementation(libs.firebase.crashlytics.buildtools)
-    implementation("io.ktor:ktor-client-core:2.3.4")
-    implementation("io.ktor:ktor-client-cio:2.3.4")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.4")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
-
+    implementation(libs.ktor.client.core.v234)
+    implementation(libs.ktor.client.cio.v234)
+    implementation(libs.ktor.client.content.negotiation.v234)
+    implementation(libs.ktor.serialization.kotlinx.json.v234)
+    implementation(libs.text.recognition)
+    implementation(libs.datastore.preferences)
+    implementation(libs.core.ktx)
 }
+

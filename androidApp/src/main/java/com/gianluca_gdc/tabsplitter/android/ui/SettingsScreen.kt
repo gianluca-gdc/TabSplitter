@@ -61,10 +61,13 @@ fun SettingsScreen(
             onValueChange = onPayerNameChange,
             label = { Text("Your Name (will be added to people list)") },
             modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = Color.Black
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Black,
+                unfocusedIndicatorColor = Color.Gray,
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.Gray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
             )
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -94,11 +97,14 @@ fun SettingsScreen(
             onValueChange = onVenmoChange,
             label = { Text("Venmo Username (without @)") },
             modifier = Modifier.fillMaxWidth()
-                .offset(y = -20.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = Color.Black
+                .offset(y = (-20).dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Black,
+                unfocusedIndicatorColor = Color.Gray,
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.Gray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
             )
 
         )
@@ -108,17 +114,20 @@ fun SettingsScreen(
             contentDescription = "Zelle",
             modifier = Modifier.size(70.dp)
                 .clip(RectangleShape)
-                .offset(y = -20.dp)
+                .offset(y = (-20).dp)
         )
         OutlinedTextField(zelleInfo,
             onValueChange = onZelleChange,
             label = { Text("Zelle (email or phone)") },
             modifier = Modifier.fillMaxWidth()
-                .offset(y = -20.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = Color.Black
+                .offset(y = (-20).dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Black,
+                unfocusedIndicatorColor = Color.Gray,
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.Gray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
             )
 
         )
@@ -128,16 +137,18 @@ fun SettingsScreen(
             contentDescription = "Cashapp",
             modifier = Modifier.size(150.dp)
                 .clip(RectangleShape)
-                .offset(y = -60.dp)
+                .offset(y = (-60).dp)
         )
         OutlinedTextField(cashAppHandle,
             onValueChange = onCashAppChange,
             label = { Text("Cash App Tag (without $)") },
-            modifier = Modifier.fillMaxWidth().offset(y = -100.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = Color.Black
+            modifier = Modifier.fillMaxWidth().offset(y = (-100).dp),
+            colors = TextFieldDefaults.colors(focusedIndicatorColor = Color.Black,
+                unfocusedIndicatorColor = Color.Gray,
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.Gray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
             )
 
         )

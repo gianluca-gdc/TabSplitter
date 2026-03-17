@@ -1,6 +1,7 @@
 package com.gianluca_gdc.tabsplitter.android.ui
 
 import android.media.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.content.MediaType.Companion.Image
@@ -27,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,42 +54,22 @@ fun Summary(
     val extraCost = ((tip / 100) * subtotal + tax) / people.size
     println(extraCost)
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .background(Color.Black),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            "Split that Tab!", style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
-                color = Color.White
-            ),
-            modifier= Modifier.padding(16.dp)
-        )
-        Spacer(Modifier.width(10.dp))
-        Image(
-            painter = painterResource(id = R.drawable.split_bar_tab_bold_icon),
-            contentDescription = "Tab Icon",
-            modifier = Modifier.size(55.dp)
-        )
-    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .padding(top = 75.dp)
+            .padding(top = 25.dp)
     ) {
 
 
         Text(
             text = "Tab Summary:",
             style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 25.sp
-            )
+                fontSize = 30.sp,
+                fontWeight = FontWeight.SemiBold
+            ),
+            modifier = Modifier.padding(start = 0.dp)
         )
         Spacer(Modifier.height(15.dp))
 
@@ -113,52 +95,44 @@ fun Summary(
                     modifier = Modifier.padding(start = 15.dp)
                 )
                 person.items.forEach { item ->
-                    Row(Modifier.padding(start = 25.dp, bottom = 4.dp, top = 10.dp)) {
-                        Text("${item.name.replaceFirstChar { it.uppercase() }} x${item.quantity}", fontSize = 12.sp)
-                        Text("  $${"%.2f".format(item.price)}", fontSize = 12.sp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 25.dp, end = 16.dp, bottom = 4.dp, top = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "${item.name.replace(Regex("^[\\d\\W_]+"), "").replaceFirstChar { it.uppercase() }}   x${item.quantity}",
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            "$${"%.2f".format(item.price)}",
+                            fontSize = 12.sp
+                        )
                     }
                 }
-                Row(modifier = Modifier.padding(top = 5.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, top = 10.dp, end = 16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
                     Text(
-                        text = "Total: $",
+                        text = "Total: ",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.padding(start = 15.dp)
+                        )
                     )
                     Text(
-
-                        text = "${"%.2f".format(person.total)}",
+                        text = "$${"%.2f".format(person.total)}",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF79e64f)
                         ),
-                        modifier = Modifier.padding(start = 2.dp)
+                        modifier = Modifier.padding(start = 4.dp)
                     )
-                    Spacer(Modifier.width(70.dp))
-                    if(person.phoneNumber.isNotEmpty()){
-                        Text(
-                            text = "Phone :",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = Modifier.padding(start = 15.dp)
-                        )
-                        Text(
-                            text = "${person.phoneNumber}",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4287f5)
-                            ),
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-
-                    }
-
                 }
 
                 Divider(
@@ -175,23 +149,18 @@ fun Summary(
                 .padding(top = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
-                onClick = { onBack(people) },
-                modifier = Modifier
-                    .width(150.dp)
-                    .padding(end = 10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(Black),
-                    contentColor = Color.White
+            OutlinedButton(
+                onClick = {onBack(people)},
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(12.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Text("Back")
             }
 
             Button(
                 onClick = { onNext(people) },
-                modifier = Modifier.width(300.dp),
                 enabled = true,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonColor(
@@ -199,8 +168,7 @@ fun Summary(
                         boolean = true
                     ),
                     contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(12.dp)
+                )
             ) {
                 Text("Split")
             }

@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     application
     id("io.ktor.plugin") version "2.3.7"
+    kotlin("plugin.serialization") version "2.1.20"
 }
 
 application {
@@ -13,12 +14,14 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
-    implementation("io.ktor:ktor-client-core:2.3.7")
-    implementation("io.ktor:ktor-client-cio:2.3.7")
-    implementation("io.ktor:ktor-client-auth:2.3.7")
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.ktor.server.core.jvm)
+    implementation(libs.ktor.server.netty.jvm)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.auth)
+    implementation(libs.logback.classic)
+    implementation(libs.libphonenumber)
 }

@@ -93,13 +93,13 @@ fun buildPaymentLinks(
         links.add("CashApp: https://cash.app/\$$it/$amount")
     }
     handles.zelle?.let {
-        links.add("Zelle: Send payment to $it via your bank app")
+        links.add("Zelle: Send payment to $it via your bank app ")
     }
 
     return links
 }
 fun sendSms(context:Context, phone: String, message: String){
-    val uri = Uri.parse("smsto:$phone") // smsto: triggers SMS-only apps
+    val uri = Uri.parse("smsto:$phone") // smsto: triggers SMS only apps
     val intent = Intent(Intent.ACTION_SENDTO, uri).apply {
         putExtra("sms_body", message)
         flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -112,25 +112,25 @@ fun buildMessage(
     paymentHandles: List<String>,
     payerName:String
 ):String{
-    val itemList = person.items.joinToString("\n") { "${it.name}    $${"%.2f".format(it.price)}" }
+    val itemList = person.items.joinToString("\n") { "${it.name}:\n$${"%.2f".format(it.price)}" }
 
     val paymentText = if (paymentHandles.isEmpty()) {
         "$payerName only accepts Apple Pay."
     } else {
-        "Please pay using one of the links below:\n" +
-                paymentHandles.joinToString("\n") { it + amount }
+        "Please pay using one of the links below:\n\n" +
+                paymentHandles.joinToString("\n\n") { it + amount }
     }
 
     return """
         Hey! You just ate with $payerName.
 
         Here's what you had:
-        $itemList
-
-        You owe $payerName a total of $amount.
-
-        $paymentText
-    """.trimIndent()
+        
+    """.trimIndent() + "\n" + itemList + "\n\n" + """
+========================
+TOTAL DUE: >>> $amount <<<
+========================
+    """.trimIndent() + "\n\n" + paymentText
 }
 
 
@@ -158,7 +158,7 @@ suspend fun sendMessages(batch: MessageBatch) {
 @Composable
 fun SuccessScreen(onNext: () -> Unit, people: List<Person>, payerName:String) {
     val cleanOffsetY = remember { Animatable(-900f) }
-    val brokenOffsetY = remember { Animatable(130f) } // start inside printer, not above
+    val brokenOffsetY = remember { Animatable(130f) } // start inside printer not above
     var showClean by remember { mutableStateOf(true) }
     var showBroken by remember { mutableStateOf(false) }
     var showColor by remember { mutableStateOf(true) }
