@@ -2,7 +2,6 @@ package com.gianluca_gdc.tabsplitter.util
 
 import com.gianluca_gdc.tabsplitter.util.roundToTwo
 
-// import kotlin.math.abs -- no longer needed
 import kotlin.collections.ArrayDeque
 import com.gianluca_gdc.tabsplitter.util.roundToTwo
 
@@ -24,7 +23,7 @@ data class ParsedReceipt(
             name to (baseTotal + taxPortion + tipPortion)
         }
 
-        // Normalize if needed
+        
         val computedTotal = preliminary.sumOf { it.second }
         val adjustmentRatio = if (computedTotal != 0.0) total / computedTotal else 1.0
 
@@ -39,15 +38,15 @@ fun parseReceiptText(rawText: String): ParsedReceipt {
     val summaryLabels = listOf("subtotal", "admin fee", "tax", "total")
     val qtyPrefix = Regex("""^[1-9]\d?[.)]?\s""")
 
-    // 1. Split lines in visual order
+    // split lines in visual order
     val rawLines = rawText.lines().map { it.trim() }.filter { it.isNotEmpty() }
-    // Debug: print raw OCR lines before parsing
+    // print raw ocr lines before parse
     println("=== Raw OCR Lines ===")
     rawLines.forEach { line ->
         println(line)
     }
     println("=====================")
-    // Normalize lines where OCR duplicated the quantity (e.g., "1 1 Brunch..." -> "1 Brunch...")
+    // normalize lines in case ocr duplicated the quantity
     val normalizedLines = rawLines.map { line ->
         line.replaceFirst(
             Regex("""^([1-9]\d?)[.)]?\s+([1-9]\d?)[.)]?\s+"""),
@@ -55,7 +54,7 @@ fun parseReceiptText(rawText: String): ParsedReceipt {
         )
     }
 
-    // 2. Collect all prices in the order they appear
+    // collect all prices in the order they appear
     val priceQueue = ArrayDeque<Double>()
     normalizedLines.forEach { line ->
         priceRegex.findAll(line).forEach { match ->
@@ -63,34 +62,34 @@ fun parseReceiptText(rawText: String): ParsedReceipt {
         }
     }
 
-    // 3. Iterate top-down, assigning each item its next price (summary handled after)
+    // iterate and assign each item its next price 
     val items = mutableListOf<Pair<String, Double>>()
     normalizedLines.forEach { line ->
         when {
-            // Item lines: must start with a quantity prefix
+            // must start with a quantity 
             qtyPrefix.containsMatchIn(line) -> {
                 val name = line.replace(priceRegex, "").trim().removeSuffix(":")
                 val price = priceQueue.removeFirstOrNull() ?: 0.0
                 items.add(name to price.roundToTwo())
             }
-            // All other lines are ignored (summary handled separately)
+            // ignored 
             else -> { /* skip */ }
         }
     }
 
-    // --- New summary extraction logic ---
-    // Collect all numeric values from the raw OCR lines
+   
+    // collect all vals from the ocr lines
     val allValues = normalizedLines.flatMap { line ->
         priceRegex.findAll(line).map { it.groupValues[1].toDouble().roundToTwo() }
     }
-    // Determine subtotal and total
+    // calc subtotal and total
     val subtotal = items.sumOf { it.second }.roundToTwo()
-    // Use the highest value seen as the total
+    // use max Val
     val total = allValues.maxOrNull() ?: subtotal
-    // Compute tax as difference between highest value and subtotal
+    // compute tax as highest value and subtotal - subract
     val tax = (total - subtotal).roundToTwo()
 
-    // Debug
+    // debug nonsense
     println("=== Parsed Receipt Items ===")
     items.forEach { (n, p) -> println("$n : $p") }
     println("Subtotal : $subtotal")
